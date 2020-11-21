@@ -12,7 +12,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
-	github.com/gofiber/cors v0.2.2
 	github.com/gofiber/fiber/v2 v2.1.4
 	github.com/gofiber/jwt/v2 v2.0.1
 	github.com/golang/protobuf v1.4.2 // indirect
