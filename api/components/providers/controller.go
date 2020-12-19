@@ -24,7 +24,7 @@ func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 	parameters.Postcode = strings.ReplaceAll(parameters.Postcode, " ", "")
 	cacheKey := structs.Sha256(parameters)
 
-	if config.Config("CACHE") != "false" {
+	if config.Config("CACHE") == "true" {
 		advertsCacheString, err := cache.RedisDB.Get(ctx, cacheKey).Result()
 		if err != nil {
 			j.logger.Debugf("%v", err)
@@ -45,7 +45,7 @@ func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get adverts", "data": err.Error()})
 	}
 
-	if config.Config("CACHE") != "false" {
+	if config.Config("CACHE") == "true" {
 		advertsJSON, err := json.Marshal(&adverts)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get adverts", "data": err.Error()})
