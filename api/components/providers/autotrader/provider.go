@@ -56,7 +56,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 		autotraderSort = ""
 	}
 
-	baseUrl := "https://www.autotrader.co.uk"
+	baseURL := "https://www.autotrader.co.uk"
 
 	db := database.DB
 	if brand != "" {
@@ -148,11 +148,11 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 		}
 	})
 
-	c.Visit(baseUrl + urlQuery)
-	// c.Visit(baseUrl + urlQuery + "&page=2")
-	// c.Visit(baseUrl + urlQuery + "&page=3")
-	// c.Visit(baseUrl + urlQuery + "&page=4")
-	// c.Visit(baseUrl + urlQuery + "&page=5")
+	c.Visit(baseURL + urlQuery)
+	// c.Visit(baseURL + urlQuery + "&page=2")
+	// c.Visit(baseURL + urlQuery + "&page=3")
+	// c.Visit(baseURL + urlQuery + "&page=4")
+	// c.Visit(baseURL + urlQuery + "&page=5")
 	// fmt.Printf("%v", Adverts)
 
 	providerAdverts := make([]structs.Adverts, 0)
@@ -163,7 +163,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 func (p *Provider) GetMakes() ([]structs.Make, error) {
 	p.logger.Notice("GetMakes for Autotrader")
 
-	baseUrl := "https://www.autotrader.co.uk"
+	baseURL := "https://www.autotrader.co.uk"
 
 	c := colly.NewCollector()
 
@@ -205,7 +205,7 @@ func (p *Provider) GetMakes() ([]structs.Make, error) {
 		categories = append(categories, category)
 	})
 
-	c.Visit(baseUrl)
+	c.Visit(baseURL)
 
 	return categories, nil
 }
