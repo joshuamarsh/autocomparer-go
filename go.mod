@@ -16,8 +16,6 @@ require (
 	github.com/gocolly/colly v1.2.0
 	github.com/gofiber/fiber/v2 v2.2.0
 	github.com/gofiber/jwt/v2 v2.1.0
-	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/gomodule/redigo v1.8.2
 	github.com/joho/godotenv v1.3.0
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/klauspost/compress v1.11.2 // indirect
