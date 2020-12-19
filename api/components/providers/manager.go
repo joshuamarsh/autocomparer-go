@@ -73,7 +73,6 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 
 	advertProviders := []structs.Advert{}
 	for _, provider := range providers {
-		m.logger.Debugf(provider + " success")
 		select {
 		case err := <-providerErrors:
 			return structs.AdvertProviders{}, err
@@ -82,6 +81,7 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 			for _, r := range res {
 				advertProviders = append(advertProviders, r.Adverts...)
 			}
+			m.logger.Debugf(provider + " success")
 			providerLock.Unlock()
 		}
 	}
