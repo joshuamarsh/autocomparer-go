@@ -29,6 +29,7 @@ func NewProvider(l *logger.Logger) *Provider {
 	}
 }
 
+// GetAdvert gets adverts from ebay
 func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string) ([]structs.Adverts, error) {
 	p.logger.Notice("GetAdvert for Ebay")
 
@@ -98,7 +99,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 
 		advert := structs.Advert{
 			Provider:    "ebay",
-			ID:          advertResponse.ItemId,
+			ID:          advertResponse.ItemID,
 			Link:        advertResponse.ViewItemURL,
 			Location:    location,
 			Distance:    uint64(distanceFloat),
@@ -148,6 +149,7 @@ func (p *Provider) execute(method string, parameters string) ([]byte, error) {
 	return body, nil
 }
 
+// GetMakes gets adverts from ebay
 func (p *Provider) GetMakes() ([]structs.Make, error) {
 	p.logger.Notice("GetMakes for Ebay")
 
@@ -220,6 +222,7 @@ func (p *Provider) GetMakes() ([]structs.Make, error) {
 	return categories, nil
 }
 
+// GetModels gets models from ebay
 func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 	p.logger.Notice("GetModels for Ebay")
 	return []structs.Model{}, nil

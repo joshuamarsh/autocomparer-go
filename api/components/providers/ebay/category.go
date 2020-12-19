@@ -2,6 +2,7 @@ package ebay
 
 import "encoding/xml"
 
+// GetCategoryInfoResponse reponse parser from ebay
 type GetCategoryInfoResponse struct {
 	XMLName       xml.Name `xml:"GetCategoryInfoResponse"`
 	Text          string   `xml:",chardata"`

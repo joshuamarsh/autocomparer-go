@@ -1,5 +1,6 @@
 package facebook
 
+// LocationResponse response parser for mapquest
 type LocationResponse struct {
 	Status int `json:"status"`
 	Result struct {
@@ -8,6 +9,7 @@ type LocationResponse struct {
 	} `json:"result"`
 }
 
+// LocationCityResponse response parser for mapquest
 type LocationCityResponse struct {
 	Results []struct {
 		Locations []struct {

@@ -36,6 +36,7 @@ package facebook
 // 	VehicleParams string `json:"vehicleParams"`
 // }
 
+// GetAdvertsRequest request parser for facebook
 type GetAdvertsRequest struct {
 	BuyLocation     BuyLocation      `json:"buyLocation"`
 	CategoryIDArray []int64          `json:"categoryIDArray"`
@@ -53,31 +54,37 @@ type GetAdvertsRequest struct {
 	TopicPageParams      TopicPageParams        `json:"topicPageParams"`
 }
 
+// BuyLocation request parser for facebook
 type BuyLocation struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
+// ContextualData request parser for facebook
 type ContextualData struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
+// StringVerticalFields request parser for facebook
 type StringVerticalFields struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
+// TopicPageParams request parser for facebook
 type TopicPageParams struct {
 	// LocationID string `json:"location_id"`
 	URL string `json:"url"`
 }
 
+// FilterSortingParams request parser for facebook
 type FilterSortingParams struct {
 	SortByFilter string `json:"sort_by_filter,omitempty"`
 	SortOrder    string `json:"sort_order,omitempty"`
 }
 
+// GetAdvertsResponse response parser for facebook
 type GetAdvertsResponse struct {
 	Data struct {
 		Viewer struct {

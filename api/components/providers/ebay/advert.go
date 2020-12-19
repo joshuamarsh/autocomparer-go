@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 )
 
+// FindItemsByKeywordsResponse reponse parser from ebay
 type FindItemsByKeywordsResponse struct {
 	XMLName      xml.Name `xml:"findItemsAdvancedResponse"`
 	Text         string   `xml:",chardata"`
@@ -16,13 +17,13 @@ type FindItemsByKeywordsResponse struct {
 		Count string `xml:"count,attr"`
 		Item  []struct {
 			Text            string `xml:",chardata"`
-			ItemId          string `xml:"itemId"`
+			ItemID          string `xml:"itemID"`
 			Title           string `xml:"title"`
-			GlobalId        string `xml:"globalId"`
+			GlobalID        string `xml:"globalID"`
 			Subtitle        string `xml:"subtitle"`
 			PrimaryCategory struct {
 				Text         string `xml:",chardata"`
-				CategoryId   string `xml:"categoryId"`
+				CategoryID   string `xml:"categoryID"`
 				CategoryName string `xml:"categoryName"`
 			} `xml:"primaryCategory"`
 			GalleryURL      string   `xml:"galleryURL"`
@@ -37,7 +38,7 @@ type FindItemsByKeywordsResponse struct {
 				Text                string `xml:",chardata"`
 				ShippingServiceCost struct {
 					Text       string `xml:",chardata"`
-					CurrencyId string `xml:"currencyId,attr"`
+					CurrencyID string `xml:"currencyID,attr"`
 				} `xml:"shippingServiceCost"`
 				ShippingType    string `xml:"shippingType"`
 				ShipToLocations string `xml:"shipToLocations"`
@@ -46,15 +47,15 @@ type FindItemsByKeywordsResponse struct {
 				Text         string `xml:",chardata"`
 				CurrentPrice struct {
 					Text       string `xml:",chardata"`
-					CurrencyId string `xml:"currencyId,attr"`
+					CurrencyID string `xml:"currencyID,attr"`
 				} `xml:"currentPrice"`
 				ConvertedCurrentPrice struct {
 					Text       string `xml:",chardata"`
-					CurrencyId string `xml:"currencyId,attr"`
+					CurrencyID string `xml:"currencyID,attr"`
 				} `xml:"convertedCurrentPrice"`
 				SellingState string `xml:"sellingState"`
 				TimeLeft     string `xml:"timeLeft"`
-				BidCount     string `xml:"bidCount"`
+				BIDCount     string `xml:"bIDCount"`
 			} `xml:"sellingStatus"`
 			ListingInfo struct {
 				Text              string `xml:",chardata"`
@@ -72,7 +73,7 @@ type FindItemsByKeywordsResponse struct {
 			} `xml:"distance"`
 			Condition struct {
 				Text                 string `xml:",chardata"`
-				ConditionId          string `xml:"conditionId"`
+				ConditionID          string `xml:"conditionID"`
 				ConditionDisplayName string `xml:"conditionDisplayName"`
 			} `xml:"condition"`
 			IsMultiVariationListing string `xml:"isMultiVariationListing"`
@@ -80,20 +81,20 @@ type FindItemsByKeywordsResponse struct {
 				Text                string `xml:",chardata"`
 				OriginalRetailPrice struct {
 					Text       string `xml:",chardata"`
-					CurrencyId string `xml:"currencyId,attr"`
+					CurrencyID string `xml:"currencyID,attr"`
 				} `xml:"originalRetailPrice"`
 				PricingTreatment string `xml:"pricingTreatment"`
 				SoldOnEbay       string `xml:"soldOnEbay"`
 				SoldOffEbay      string `xml:"soldOffEbay"`
 			} `xml:"discountPriceInfo"`
 			TopRatedListing string `xml:"topRatedListing"`
-			ProductId       struct {
+			ProductID       struct {
 				Text string `xml:",chardata"`
 				Type string `xml:"type,attr"`
-			} `xml:"productId"`
+			} `xml:"productID"`
 			SecondaryCategory struct {
 				Text         string `xml:",chardata"`
-				CategoryId   string `xml:"categoryId"`
+				CategoryID   string `xml:"categoryID"`
 				CategoryName string `xml:"categoryName"`
 			} `xml:"secondaryCategory"`
 		} `xml:"item"`

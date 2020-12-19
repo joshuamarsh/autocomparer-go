@@ -14,7 +14,7 @@ import (
 
 var ctx = context.Background()
 
-// GetAdverts get adverts from all sources provided
+// GetAdverts get adverts from all providers provided
 func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 	parameters := new(GetAdvertsParameters)
 	if err := c.QueryParser(parameters); err != nil {
@@ -59,7 +59,7 @@ func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 	return c.JSON(adverts)
 }
 
-// GetCategories get adverts from all sources provided
+// GetMakes get makes from all providers provided
 func (j *JSON) GetMakes(c *fiber.Ctx) error {
 	parameters := new(GetMakesParameters)
 	if err := c.QueryParser(parameters); err != nil {
@@ -99,6 +99,7 @@ func (j *JSON) GetMakes(c *fiber.Ctx) error {
 	return c.JSON(makes)
 }
 
+// GetModels get models from all providers provided
 func (j *JSON) GetModels(c *fiber.Ctx) error {
 	var err error
 

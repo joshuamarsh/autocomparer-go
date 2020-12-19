@@ -33,6 +33,7 @@ func NewProvider(l *logger.Logger) *Provider {
 	}
 }
 
+// GetAdvert gets adverts from facebook
 func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string) ([]structs.Adverts, error) {
 	p.logger.Notice("GetAdvert for Facebook")
 
@@ -222,11 +223,13 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	return providerAdverts, nil
 }
 
+// GetMakes gets makes from facebook
 func (p *Provider) GetMakes() ([]structs.Make, error) {
 	p.logger.Notice("GetMakes for Facebook")
 	return []structs.Make{}, nil
 }
 
+// GetModels gets models from facebook
 func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 	p.logger.Notice("GetModels for Facebook")
 	return []structs.Model{}, nil

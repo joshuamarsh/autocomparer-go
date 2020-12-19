@@ -119,6 +119,7 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 	return advert, nil
 }
 
+// GetMakes sorts makes from all providers provided
 func (m *Manager) GetMakes(providers []string) ([]structs.MakeProvider, error) {
 	for _, provider := range providers {
 		if _, ok := m.providers[provider]; !ok {
@@ -190,6 +191,7 @@ func (m *Manager) GetMakes(providers []string) ([]structs.MakeProvider, error) {
 	return makesProviders, nil
 }
 
+// GetModels sorts models from all providers provided
 func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelProvider, error) {
 	for _, provider := range providers {
 		if _, ok := m.providers[provider]; !ok {
