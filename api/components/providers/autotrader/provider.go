@@ -2,12 +2,14 @@ package autotrader
 
 import (
 	"bytes"
+	"carcompare/api/database"
+	"carcompare/api/models"
 	"carcompare/structs"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -55,6 +57,24 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	}
 
 	baseUrl := "https://www.autotrader.co.uk"
+
+	db := database.DB
+	if brand != "" {
+		var makeAutotrader models.Make
+		db.Where("value = ? AND provider = ?", brand, "autotrader").First(&makeAutotrader)
+		if makeAutotrader.ProviderValue != "" {
+			brand = url.QueryEscape(makeAutotrader.ProviderValue)
+		}
+	}
+
+	if model != "" {
+		var modelAutotrader models.Model
+		db.Where("value = ? AND provider = ? AND make = ?", model, "autotrader", brand).First(&modelAutotrader)
+		if modelAutotrader.ProviderValue != "" {
+			model = url.QueryEscape(modelAutotrader.ProviderValue)
+		}
+	}
+
 	urlQuery := fmt.Sprintf("/car-search?sort=%s&postcode=%s&radius=%s&make=%s&model=%s", autotraderSort, postcode, radius, brand, model)
 	p.logger.Debugf("%s", urlQuery)
 	c := colly.NewCollector()
@@ -107,13 +127,16 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 				description = e.ChildText(".product-card-details__attention-grabber")
 			}
 
+			distanceString := strings.Replace(strings.Replace(e.Attr("data-distance-value"), "s", "", -1), " mile", "", 1)
+			distance, _ := strconv.ParseUint(strings.Replace(distanceString, " miles", "", 1), 0, 64)
+
 			if e.Attr("id") != "" && title != "" && price != "" {
 				advert := structs.Advert{
 					Provider:    "autotrader",
 					ID:          e.Attr("id"),
 					Link:        "https://www.autotrader.co.uk" + linkParams,
 					Location:    e.ChildText(".seller-town"),
-					Distance:    e.Attr("data-distance-value"),
+					Distance:    distance,
 					Title:       title,
 					Price:       priceFormatted * 100,
 					Mileage:     mileage,
@@ -145,6 +168,7 @@ func (p *Provider) GetMakes() ([]structs.Make, error) {
 	c := colly.NewCollector()
 
 	categories := []structs.Make{}
+	// db := database.DB
 	c.OnHTML(".atc-field__input.atc-field__input--select optgroup[label='All makes'] option", func(e *colly.HTMLElement) {
 		name := strings.Split(e.Text, " (")[0]
 		switch name {
@@ -161,9 +185,20 @@ func (p *Provider) GetMakes() ([]structs.Make, error) {
 		case "Custom Vehicle":
 			name = "Kit Cars/Custom Vehicle"
 		}
+
+		value := e.Attr("value")
+		// makeDB := models.Make{
+		// 	Value:    value,
+		// 	Name:     name,
+		// 	Provider: "autotrader",
+		// }
+		// if err := db.Create(&makeDB).Error; err != nil {
+		// 	p.logger.Errorf("failed to create make %s", name)
+		// }
+
 		category := structs.Make{
 			Provider: "autotrader",
-			ID:       e.Attr("value"),
+			ID:       value,
 			Name:     name,
 		}
 
@@ -178,6 +213,10 @@ func (p *Provider) GetMakes() ([]structs.Make, error) {
 func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 	p.logger.Notice("GetModels for Autotrader")
 
+	db := database.DB
+	var make models.Make
+	db.Where("value = ? AND provider = ?", brand, "autotrader").First(&make)
+
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
@@ -186,7 +225,7 @@ func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 		OperationName: "SearchFormFacetsQuery",
 		Variables: Variables{
 			AdvertQuery: AdvertQuery{
-				Make: []string{brand},
+				Make: []string{make.ProviderValue},
 			},
 			Facets: []string{"model"},
 		},
@@ -218,12 +257,13 @@ func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 	}
 
 	if len(modelsResponse.Data.Search.Adverts.Facets) < 1 {
-		return []structs.Model{}, errors.New("No models found")
+		return []structs.Model{}, nil
 	}
 
-	models := []structs.Model{}
+	providerModels := []structs.Model{}
+	// db := database.DB
 	for _, modelResponse := range modelsResponse.Data.Search.Adverts.Facets[0].Values {
-		modelName := modelResponse.Name
+		modelName := strings.Title(strings.ToLower(modelResponse.Name))
 		modelValue := modelResponse.Value
 		if modelName != "" && modelValue != "" {
 			model := structs.Model{
@@ -231,9 +271,9 @@ func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 				ID:       modelValue,
 				Name:     modelName,
 			}
-			models = append(models, model)
+			providerModels = append(providerModels, model)
 		}
 	}
 
-	return models, nil
+	return providerModels, nil
 }

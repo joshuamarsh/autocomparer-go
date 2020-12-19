@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"carcompare/api/database"
+	"carcompare/api/models"
 	"carcompare/structs"
 	"fmt"
 	"sort"
@@ -8,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/apsdehal/go-logger"
+	"gorm.io/gorm/clause"
 )
 
 // Manager handles data from multiple providers
@@ -91,7 +94,9 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 	case "date_asc":
 		sortBy = ""
 	case "dist_asc":
-		sortBy = "DistanceNearest"
+		sort.Slice(advertProviders, func(i, j int) bool {
+			return advertProviders[i].Distance < advertProviders[j].Distance
+		})
 	case "year_desc":
 		sortBy = "year-desc"
 	case "price_asc":
@@ -139,7 +144,8 @@ func (m *Manager) GetMakes(providers []string) ([]structs.MakeProvider, error) {
 		}(provider)
 	}
 
-	categoryProviders := []structs.MakeProvider{}
+	makesProviders := []structs.MakeProvider{}
+	db := database.DB
 	for _, provider := range providers {
 		m.logger.Debugf(provider + " success")
 		select {
@@ -148,27 +154,40 @@ func (m *Manager) GetMakes(providers []string) ([]structs.MakeProvider, error) {
 		case res := <-providerResponses:
 			providerLock.Lock()
 			for _, r := range res {
-				categories := []structs.MakeProvider{}
-				for _, category := range r {
-					newCategory := true
-					for index, categoryProvider := range categoryProviders {
-						if category.Name == categoryProvider.Name {
-							categoryProviders[index].Providers[category.Provider] = category.ID
-							newCategory = false
+				makesProvider := []structs.MakeProvider{}
+				for _, make := range r {
+					newMake := true
+					for _, modelProvider := range makesProviders {
+						if make.Name == modelProvider.Name {
+							newMake = false
 						}
 					}
-					if newCategory {
-						id := strings.ToLower(strings.ReplaceAll(category.Name, " ", ""))
-						categories = append(categories, structs.MakeProvider{ID: id, Providers: map[string]string{category.Provider: category.ID}, Name: category.Name})
+					idReplace := strings.NewReplacer(" ", "", "/", "")
+					id := strings.ToLower(idReplace.Replace(make.Name))
+					makeDB := models.Make{
+						Value:         id,
+						Provider:      make.Provider,
+						Name:          make.Name,
+						ProviderValue: make.ID,
+					}
+					db.Clauses(clause.OnConflict{
+						UpdateAll: true,
+					}).Create(&makeDB)
+					if newMake {
+						makesProvider = append(makesProvider, structs.MakeProvider{ID: id, Name: make.Name})
 					}
 				}
-				categoryProviders = append(categoryProviders, categories...)
+				makesProviders = append(makesProviders, makesProvider...)
 			}
 			providerLock.Unlock()
 		}
 	}
 
-	return categoryProviders, nil
+	sort.Slice(makesProviders, func(i, j int) bool {
+		return makesProviders[i].Name < makesProviders[j].Name
+	})
+
+	return makesProviders, nil
 }
 
 func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelProvider, error) {
@@ -197,6 +216,7 @@ func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelPr
 	}
 
 	modelProviders := []structs.ModelProvider{}
+	db := database.DB
 	for _, provider := range providers {
 		m.logger.Debugf(provider + " success")
 		select {
@@ -205,25 +225,40 @@ func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelPr
 		case res := <-providerResponses:
 			providerLock.Lock()
 			for _, r := range res {
-				models := []structs.ModelProvider{}
+				modelsProvider := []structs.ModelProvider{}
 				for _, model := range r {
 					newModel := true
-					for index, modelProvider := range modelProviders {
+					for _, modelProvider := range modelProviders {
 						if model.Name == modelProvider.Name {
-							modelProviders[index].Providers[model.Provider] = model.ID
 							newModel = false
 						}
 					}
+					idReplace := strings.NewReplacer(" ", "", "/", "")
+					id := strings.ToLower(idReplace.Replace(model.Name))
+					modelDB := models.Model{
+						Value:         id,
+						Provider:      model.Provider,
+						Make:          brand,
+						Name:          model.Name,
+						ProviderValue: model.ID,
+					}
+					db.Clauses(clause.OnConflict{
+						UpdateAll: true,
+					}).Create(&modelDB)
+
 					if newModel {
-						id := strings.ToLower(strings.ReplaceAll(model.Name, " ", ""))
-						models = append(models, structs.ModelProvider{ID: id, Providers: map[string]string{model.Provider: model.ID}, Name: model.Name})
+						modelsProvider = append(modelsProvider, structs.ModelProvider{ID: id, Name: model.Name})
 					}
 				}
-				modelProviders = append(modelProviders, models...)
+				modelProviders = append(modelProviders, modelsProvider...)
 			}
 			providerLock.Unlock()
 		}
 	}
+
+	// sort.Slice(modelProviders, func(i, j int) bool {
+	// 	return modelProviders[i].Name < modelProviders[j].Name
+	// })
 
 	return modelProviders, nil
 }

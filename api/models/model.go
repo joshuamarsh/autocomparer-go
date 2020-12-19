@@ -1,11 +1,10 @@
 package models
 
-import "github.com/jinzhu/gorm"
-
 // Model struct
 type Model struct {
-	gorm.Model
-	Username string `gorm:"unique_index;not null" json:"username"`
-	Email    string `gorm:"unique_index;not null" json:"email"`
-	Password string `gorm:"not null" json:"password"`
+	Value         string `gorm:"primary_key;not null"`
+	Provider      string `gorm:"primary_key;not null"`
+	Make          string `gorm:"primary_key;not null"`
+	Name          string `gorm:"not null"`
+	ProviderValue string `gorm:"not null"`
 }

@@ -1,12 +1,11 @@
 package providers
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/apsdehal/go-logger"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cache"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
 
 // JSON logger and providers structure
@@ -23,39 +22,22 @@ func SetupRoutes(app fiber.Router, m Manager, l *logger.Logger) {
 	}
 
 	advertRoute := app.Group("/adverts")
-	advertRoute.Get("/", cache.New(cache.Config{
-		Expiration: 30 * time.Minute,
-		Key: func(c *fiber.Ctx) string {
-			parameters := new(GetAdvertsParameters)
-			if err := c.QueryParser(parameters); err != nil {
-				j.logger.Errorf("%s", err)
-				return err.Error()
-			}
 
-			parametersJSON, err := json.Marshal(parameters)
-			if err != nil {
-				j.logger.Errorf("%s", err)
-				return err.Error()
-			}
+	advertRoute.Get("/", j.GetAdverts)
 
-			return string(parametersJSON)
-		},
-	}), j.GetAdverts)
-
-	app.Get("/GetMakes", cache.New(cache.Config{
-		Expiration: 30 * time.Minute,
+	app.Get("/GetMakes", limiter.New(limiter.Config{
+		Max:        30,
+		Expiration: 1 * time.Minute,
 	}), j.GetMakes)
 
-	app.Get("/GetModels", cache.New(cache.Config{
-		Expiration: 30 * time.Minute,
-		Key: func(c *fiber.Ctx) string {
-			parameters := new(GetModelsParameters)
-			if err := c.QueryParser(parameters); err != nil {
-				j.logger.Errorf("%v", err)
-			}
-			return parameters.Brand
+	app.Get("/GetModels", limiter.New(limiter.Config{
+		Max:        30,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.SendStatus(fiber.StatusTooManyRequests)
 		},
 	}), j.GetModels)
-
-	// app.Get("/GetModels", cache.New(), j.GetModels)
 }

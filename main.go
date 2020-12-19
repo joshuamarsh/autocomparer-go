@@ -5,7 +5,9 @@ import (
 	"carcompare/api/components/providers"
 	"carcompare/api/components/providers/autotrader"
 	"carcompare/api/components/providers/ebay"
+	"carcompare/api/components/providers/facebook"
 	"carcompare/api/database"
+	"carcompare/cache"
 	"log"
 	"os"
 
@@ -14,6 +16,7 @@ import (
 
 func main() {
 	database.Connect()
+	cache.Connect()
 
 	l, err := logger.New("", 1, os.Stdout)
 	if err != nil {
@@ -36,6 +39,12 @@ func main() {
 		l.Fatalf("%s", err)
 	}
 
+	facebookProvider := facebook.NewProvider(l)
+	if err := manager.RegisterProvider("facebook", facebookProvider); err != nil {
+		l.Fatalf("%s", err)
+	}
+
 	api.Run(manager, l)
-	defer database.DB.Close()
+
+	defer cache.RedisDB.Close()
 }

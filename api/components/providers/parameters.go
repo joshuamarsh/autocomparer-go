@@ -10,7 +10,7 @@ type GetMakesParameters struct {
 }
 
 type GetAdvertsParameters struct {
-	Provider []string `query:"provider[]"`
+	Provider []string `query:"provider"`
 	Brand    string   `query:"make"`
 	Model    string   `query:"model"`
 	Postcode string   `query:"postcode"`

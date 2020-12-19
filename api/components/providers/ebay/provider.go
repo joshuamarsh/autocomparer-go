@@ -2,7 +2,7 @@ package ebay
 
 import (
 	"bytes"
-	"carcompare/api/config"
+	"carcompare/config"
 	"carcompare/structs"
 	"encoding/xml"
 	"fmt"
@@ -94,12 +94,14 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 		pricePence, _ := strconv.ParseInt(priceFloat, 10, 64)
 
 		location := strings.ReplaceAll(advertResponse.Location, ",", ", ")
+		distanceFloat, _ := strconv.ParseFloat(advertResponse.Distance.Text, 64)
+
 		advert := structs.Advert{
 			Provider:    "ebay",
 			ID:          advertResponse.ItemId,
 			Link:        advertResponse.ViewItemURL,
 			Location:    location,
-			Distance:    advertResponse.Distance.Text + " miles",
+			Distance:    uint64(distanceFloat),
 			Title:       advertResponse.Title,
 			Price:       pricePence,
 			Description: advertResponse.Subtitle,
