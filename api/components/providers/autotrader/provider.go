@@ -160,6 +160,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	return providerAdverts, nil
 }
 
+// GetMakes gets makes from autotrader
 func (p *Provider) GetMakes() ([]structs.Make, error) {
 	p.logger.Notice("GetMakes for Autotrader")
 
@@ -210,6 +211,7 @@ func (p *Provider) GetMakes() ([]structs.Make, error) {
 	return categories, nil
 }
 
+// GetModels gets models from autotrader
 func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 	p.logger.Notice("GetModels for Autotrader")
 
