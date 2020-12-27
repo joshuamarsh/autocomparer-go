@@ -7,13 +7,17 @@ import (
 
 // AdvertProviders stores adverts from all providers
 type AdvertProviders struct {
-	Providers []string `json:"providers"`
-	Adverts   []Advert `json:"adverts"`
+	Providers                  []string `json:"providers"`
+	LowestProviderHighestPrice *int64   `json:"lowest_provider_highest_price"`
+	HighestProviderLowestPrice *int64   `json:"highest_provider_lowest_price"`
+	Adverts                    []Advert `json:"adverts"`
 }
 
 // Adverts stores adverts from a single provider
 type Adverts struct {
-	Adverts []Advert `json:"adverts"`
+	Adverts                    []Advert `json:"adverts"`
+	LowestProviderHighestPrice *int64
+	HighestProviderLowestPrice *int64
 }
 
 // Advert store information about a single advert

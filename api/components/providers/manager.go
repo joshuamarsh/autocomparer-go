@@ -71,7 +71,7 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 		}(provider)
 	}
 
-	advertProviders := []structs.Advert{}
+	advertProviders := structs.Adverts{}
 	for _, provider := range providers {
 		select {
 		case err := <-providerErrors:
@@ -79,7 +79,17 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 		case res := <-providerResponses:
 			providerLock.Lock()
 			for _, r := range res {
-				advertProviders = append(advertProviders, r.Adverts...)
+				if sortBy == "price_asc" {
+					highestPrice := r.Adverts[len(r.Adverts)-1].Price
+					if advertProviders.LowestProviderHighestPrice == nil {
+						advertProviders.LowestProviderHighestPrice = &highestPrice
+					} else {
+						if highestPrice < *advertProviders.LowestProviderHighestPrice {
+							*advertProviders.LowestProviderHighestPrice = highestPrice
+						}
+					}
+				}
+				advertProviders.Adverts = append(advertProviders.Adverts, r.Adverts...)
 			}
 			m.logger.Debugf(provider + " success")
 			providerLock.Unlock()
@@ -94,18 +104,18 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 	case "date_asc":
 		sortBy = ""
 	case "dist_asc":
-		sort.Slice(advertProviders, func(i, j int) bool {
-			return advertProviders[i].Distance < advertProviders[j].Distance
+		sort.Slice(advertProviders.Adverts, func(i, j int) bool {
+			return advertProviders.Adverts[i].Distance < advertProviders.Adverts[j].Distance
 		})
 	case "year_desc":
 		sortBy = "year-desc"
 	case "price_asc":
-		sort.Slice(advertProviders, func(i, j int) bool {
-			return advertProviders[i].Price < advertProviders[j].Price
+		sort.Slice(advertProviders.Adverts, func(i, j int) bool {
+			return advertProviders.Adverts[i].Price < advertProviders.Adverts[j].Price
 		})
 	case "price_desc":
-		sort.Slice(advertProviders, func(i, j int) bool {
-			return advertProviders[i].Price > advertProviders[j].Price
+		sort.Slice(advertProviders.Adverts, func(i, j int) bool {
+			return advertProviders.Adverts[i].Price > advertProviders.Adverts[j].Price
 		})
 	case "miles_asc":
 		sortBy = ""
@@ -113,7 +123,9 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 		sortBy = ""
 	}
 
-	advert.Adverts = advertProviders
+	advert.Adverts = advertProviders.Adverts
+	advert.HighestProviderLowestPrice = advertProviders.HighestProviderLowestPrice
+	advert.LowestProviderHighestPrice = advertProviders.LowestProviderHighestPrice
 	advert.Providers = providers
 
 	return advert, nil
