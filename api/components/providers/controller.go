@@ -40,7 +40,7 @@ func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 		}
 	}
 
-	adverts, err := j.providersManager.GetAdvert(parameters.Provider, parameters.Brand, parameters.Model, parameters.Postcode, parameters.Radius, parameters.SortBy)
+	adverts, err := j.providersManager.GetAdvert(parameters.Provider, parameters.Brand, parameters.Model, parameters.Postcode, parameters.Radius, parameters.SortBy, parameters.Page)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get adverts", "data": err.Error()})
 	}

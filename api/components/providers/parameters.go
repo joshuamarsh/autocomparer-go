@@ -19,4 +19,5 @@ type GetAdvertsParameters struct {
 	Postcode string   `query:"postcode"`
 	Radius   string   `query:"radius"`
 	SortBy   string   `query:"sort"`
+	Page     *uint    `query:"page"`
 }

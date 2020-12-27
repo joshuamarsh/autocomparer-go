@@ -42,7 +42,7 @@ func (m *Manager) RegisterProvider(id string, p Provider) error {
 }
 
 // GetAdvert sorts all adverts from all sources into array
-func (m *Manager) GetAdvert(providers []string, brand string, model string, postcode string, radius string, sortBy string) (structs.AdvertProviders, error) {
+func (m *Manager) GetAdvert(providers []string, brand string, model string, postcode string, radius string, sortBy string, page *uint) (structs.AdvertProviders, error) {
 	for _, provider := range providers {
 		if _, ok := m.providers[provider]; !ok {
 			return structs.AdvertProviders{}, fmt.Errorf("Provider %s is not supported", provider)
@@ -57,7 +57,7 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 
 	for _, provider := range providers {
 		go func(provider string) {
-			res, err := m.providers[provider].GetAdvert(postcode, radius, brand, model, sortBy)
+			res, err := m.providers[provider].GetAdvert(postcode, radius, brand, model, sortBy, page)
 			if err != nil {
 				providerErrors <- err
 			} else {

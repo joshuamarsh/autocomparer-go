@@ -31,7 +31,7 @@ func NewProvider(l *logger.Logger) *Provider {
 }
 
 // GetAdvert gets adverts from autotrader
-func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string) ([]structs.Adverts, error) {
+func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Adverts, error) {
 	p.logger.Notice("GetAdvert for Autotrader")
 
 	autotraderSort := ""
@@ -148,11 +148,42 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 		}
 	})
 
-	c.Visit(baseURL + urlQuery)
-	// c.Visit(baseURL + urlQuery + "&page=2")
+	advertCount := 0
+	c.OnHTML(".search-form__count", func(e *colly.HTMLElement) {
+		if e.Text != "" {
+			searchCountString := strings.Replace(e.Text, ",", "", 1)
+			searchCountSplitString := strings.Fields(searchCountString)
+			if len(searchCountSplitString) > 0 {
+				searchCount, err := strconv.Atoi(searchCountSplitString[0])
+				if err == nil {
+					advertCount = searchCount
+				}
+			}
+		}
+	})
+
+	if page == nil || *page == 0 || *page == 1 {
+		c.Visit(baseURL + urlQuery)
+		if advertCount > 10 {
+			c.Visit(baseURL + urlQuery + "&page=2")
+		}
+		if advertCount > 20 {
+			c.Visit(baseURL + urlQuery + "&page=3")
+		}
+	} else {
+		autotraderPage := *page*3 - 2
+		c.Visit(fmt.Sprintf("%s%s&page=%d", baseURL, urlQuery, int(autotraderPage)))
+		if advertCount < (int(autotraderPage)*10 - 9) {
+			Adverts = structs.Adverts{}
+		}
+		if advertCount > (int(autotraderPage)+1)*10 {
+			c.Visit(fmt.Sprintf("%s%s&page=%d", baseURL, urlQuery, (int(autotraderPage) + 1)))
+		}
+		if advertCount > (int(autotraderPage)+2)*10 {
+			c.Visit(fmt.Sprintf("%s%s&page=%d", baseURL, urlQuery, (int(autotraderPage) + 2)))
+		}
+	}
 	// c.Visit(baseURL + urlQuery + "&page=3")
-	// c.Visit(baseURL + urlQuery + "&page=4")
-	// c.Visit(baseURL + urlQuery + "&page=5")
 	// fmt.Printf("%v", Adverts)
 
 	providerAdverts := make([]structs.Adverts, 0)

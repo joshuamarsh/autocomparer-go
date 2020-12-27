@@ -30,7 +30,7 @@ func NewProvider(l *logger.Logger) *Provider {
 }
 
 // GetAdvert gets adverts from ebay
-func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string) ([]structs.Adverts, error) {
+func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Adverts, error) {
 	p.logger.Notice("GetAdvert for Ebay")
 
 	ebaySort := ""
@@ -57,7 +57,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 
 	params := url.Values{}
 	params.Add("OPERATION-NAME", "findItemsAdvanced")
-	params.Add("paginationInput.entriesPerPage", "50")
+	params.Add("paginationInput.entriesPerPage", "30")
 	params.Add("keywords", brand+" "+model)
 	params.Add("buyerPostalCode", postcode)
 	params.Add("outputSelector", "PictureURLLarge")
@@ -65,6 +65,16 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	params.Add("categoryId", "9801")
 	params.Add("itemFilter(0).name", "MaxDistance")
 	params.Add("itemFilter(0).value", radius)
+
+	if page == nil || *page == 0 || *page == 1 {
+		params.Add("paginationInput.pageNumber", "1")
+	} else {
+		ebayPage := strconv.Itoa(int(*page))
+		if ebayPage == "" {
+			params.Add("paginationInput.pageNumber", "1")
+		}
+		params.Add("paginationInput.pageNumber", ebayPage)
+	}
 
 	urlQuery := fmt.Sprintf("/services/search/FindingService/v1?%s", params.Encode())
 

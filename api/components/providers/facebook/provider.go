@@ -34,7 +34,7 @@ func NewProvider(l *logger.Logger) *Provider {
 }
 
 // GetAdvert gets adverts from facebook
-func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string) ([]structs.Adverts, error) {
+func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Adverts, error) {
 	p.logger.Notice("GetAdvert for Facebook")
 
 	facebookSort := ""
