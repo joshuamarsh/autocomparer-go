@@ -17,7 +17,7 @@ type FindItemsByKeywordsResponse struct {
 		Count string `xml:"count,attr"`
 		Item  []struct {
 			Text            string `xml:",chardata"`
-			ItemID          string `xml:"itemID"`
+			ItemID          string `xml:"itemId"`
 			Title           string `xml:"title"`
 			GlobalID        string `xml:"globalID"`
 			Subtitle        string `xml:"subtitle"`
