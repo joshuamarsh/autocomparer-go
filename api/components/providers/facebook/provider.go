@@ -37,43 +37,43 @@ func NewProvider(l *logger.Logger) *Provider {
 func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Adverts, error) {
 	p.logger.Notice("GetAdvert for Facebook")
 
-	facebookSort := ""
-	facebookSortOrder := ""
-	switch sortBy {
-	case "best_match":
-		facebookSort = ""
-		facebookSortOrder = ""
-	case "date_asc":
-		facebookSort = "CREATION_TIME"
-		facebookSortOrder = "ASCEND"
-	case "date_desc":
-		facebookSort = "CREATION_TIME"
-		facebookSortOrder = "DESCEND"
-	case "dist_asc":
-		facebookSort = "DISTANCE"
-		facebookSortOrder = "ASCEND"
-	case "year_asc":
-		facebookSort = "VEHICLE_YEAR"
-		facebookSortOrder = "ASCEND"
-	case "year_desc":
-		facebookSort = "VEHICLE_YEAR"
-		facebookSortOrder = "DESCEND"
-	case "price_asc":
-		facebookSort = "PRICE_AMOUNT"
-		facebookSortOrder = "ASCEND"
-	case "price_desc":
-		facebookSort = "PRICE_AMOUNT"
-		facebookSortOrder = "DESCEND"
-	case "miles_asc":
-		facebookSort = "VEHICLE_MILEAGE"
-		facebookSortOrder = "ASCEND"
-	case "miles_desc":
-		facebookSort = "VEHICLE_MILEAGE"
-		facebookSortOrder = "DESCEND"
-	default:
-		facebookSort = ""
-		facebookSortOrder = ""
-	}
+	// facebookSort := ""
+	// facebookSortOrder := ""
+	// switch sortBy {
+	// case "best_match":
+	// 	facebookSort = ""
+	// 	facebookSortOrder = ""
+	// case "date_asc":
+	// 	facebookSort = "CREATION_TIME"
+	// 	facebookSortOrder = "ASCEND"
+	// case "date_desc":
+	// 	facebookSort = "CREATION_TIME"
+	// 	facebookSortOrder = "DESCEND"
+	// case "dist_asc":
+	// 	facebookSort = "DISTANCE"
+	// 	facebookSortOrder = "ASCEND"
+	// case "year_asc":
+	// 	facebookSort = "VEHICLE_YEAR"
+	// 	facebookSortOrder = "ASCEND"
+	// case "year_desc":
+	// 	facebookSort = "VEHICLE_YEAR"
+	// 	facebookSortOrder = "DESCEND"
+	// case "price_asc":
+	// 	facebookSort = "PRICE_AMOUNT"
+	// 	facebookSortOrder = "ASCEND"
+	// case "price_desc":
+	// 	facebookSort = "PRICE_AMOUNT"
+	// 	facebookSortOrder = "DESCEND"
+	// case "miles_asc":
+	// 	facebookSort = "VEHICLE_MILEAGE"
+	// 	facebookSortOrder = "ASCEND"
+	// case "miles_desc":
+	// 	facebookSort = "VEHICLE_MILEAGE"
+	// 	facebookSortOrder = "DESCEND"
+	// default:
+	// 	facebookSort = ""
+	// 	facebookSortOrder = ""
+	// }
 
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
@@ -82,52 +82,56 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	db := database.DB
 	if brand != "" {
 		var makeFacebook models.Make
-		db.Where("value = ? AND provider = ?", brand, "autotrader").First(&makeFacebook)
+		db.Where("value = ? AND provider = ?", brand, "facebook").First(&makeFacebook)
 		if makeFacebook.ProviderValue != "" {
-			brand = makeFacebook.Name
+			brand = makeFacebook.ProviderValue
 		}
 	}
 
 	if model != "" {
 		var modelFacebook models.Model
-		db.Where("value = ? AND provider = ? AND make = ?", model, "autotrader", brand).First(&modelFacebook)
+		db.Where("value = ? AND provider = ? AND make = ?", model, "facebook", brand).First(&modelFacebook)
 		if modelFacebook.ProviderValue != "" {
-			model = modelFacebook.Name
+			model = modelFacebook.ProviderValue
 		}
 	}
 
 	getModelsRequest := GetAdvertsRequest{
-		// BuyLocation: BuyLocation{
-		// 	Latitude:  53.478698730469,
-		// 	Longitude: -2.2467041015625,
-		// },
+		BuyLocation: BuyLocation{
+			Latitude:  53.478698730469,
+			Longitude: -2.2467041015625,
+		},
 		CategoryIDArray: []int64{807311116002614},
-		// ContextualData: []ContextualData{
-		// 	{Name: "make", Value: brand},
-		// 	{Name: "model", Value: model},
-		// },
+		ContextualData: []ContextualData{
+			{Name: "make", Value: brand},
+			{Name: "model", Value: model},
+		},
 		Count:                    24,
 		MarketplaceBrowseContext: "CATEGORY_FEED",
-		PriceRange:               []int{0, 214748364700},
-		Radius:                   500000,
+		PriceRange:               []int64{0, 214748364700},
+		Radius:                   60000,
 		Scale:                    2,
+		StringVerticalFields: []ContextualData{
+			{Name: "canonical_make_id", Value: brand},
+			{Name: "canonical_model_id", Value: model},
+		},
 		TopicPageParams: TopicPageParams{
-			// LocationID: "manchester",
-			URL: "vehicles",
+			LocationID: "manchester",
+			URL:        "vehicles",
 		},
 	}
 
-	if postcode != "" {
-		location, err := getLocation(postcode)
-		if err != nil {
-			return []structs.Adverts{}, err
-		}
+	// if postcode != "" {
+	// 	location, err := getLocation(postcode)
+	// 	if err != nil {
+	// 		return []structs.Adverts{}, err
+	// 	}
 
-		getModelsRequest.BuyLocation = BuyLocation{
-			Latitude:  location.Latitude,
-			Longitude: location.Longitude,
-		}
-	}
+	// 	getModelsRequest.BuyLocation = BuyLocation{
+	// 		Latitude:  location.Latitude,
+	// 		Longitude: location.Longitude,
+	// 	}
+	// }
 	// getModelsRequest.BuyLocation = BuyLocation{
 	// 	Latitude:  53.478698730469,
 	// 	Longitude: -2.2467041015625,
@@ -135,32 +139,36 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 
 	// p.logger.Debugf("%v", getModelsRequest.BuyLocation)
 
-	if brand != "" {
-		getModelsRequest.StringVerticalFields = append(getModelsRequest.StringVerticalFields, StringVerticalFields{Name: "canonical_make_id", Value: brand})
-	}
+	// if brand != "" {
+	// 	getModelsRequest.StringVerticalFields = append(getModelsRequest.StringVerticalFields, StringVerticalFields{Name: "canonical_make_id", Value: brand})
+	// }
 
-	if brand != "" && model != "" {
-		getModelsRequest.StringVerticalFields = append(getModelsRequest.StringVerticalFields, StringVerticalFields{Name: "canonical_model_id", Value: model})
-	}
+	// if brand != "" && model != "" {
+	// 	getModelsRequest.StringVerticalFields = append(getModelsRequest.StringVerticalFields, StringVerticalFields{Name: "canonical_model_id", Value: model})
+	// }
 
-	if facebookSort != "" {
-		getModelsRequest.FilterSortingParams = &FilterSortingParams{
-			SortByFilter: facebookSort,
-			SortOrder:    facebookSortOrder,
-		}
-	}
+	// if facebookSort != "" {
+	// 	getModelsRequest.FilterSortingParams = &FilterSortingParams{
+	// 		SortByFilter: facebookSort,
+	// 		SortOrder:    facebookSortOrder,
+	// 	}
+	// }
 
 	modelsRequestBody, err := json.Marshal(getModelsRequest)
+	if err != nil {
+		return []structs.Adverts{}, err
+	}
 
 	formData := url.Values{
 		"fb_api_caller_class":      {"RelayModern"},
 		"fb_api_req_friendly_name": {"CometMarketplaceCategoryContentContainerQuery"},
 		"variables":                {string(modelsRequestBody)},
-		"server_timestamps":        {"true"},
-		"doc_id":                   {"3423062754427357"},
+		"doc_id":                   {"5111225608947754"},
 	}
 
-	req, err := http.NewRequest("POST", "https://www.facebook.com/api/graphql", strings.NewReader(formData.Encode()))
+	// p.logger.Debugf("%s", string(modelsRequestBody))
+
+	req, err := http.NewRequest("POST", "https://en-gb.facebook.com/api/graphql/", strings.NewReader(formData.Encode()))
 	if err != nil {
 		return []structs.Adverts{}, err
 	}
@@ -191,16 +199,16 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	adverts := structs.Adverts{}
 	for _, advertResponse := range advertsResponse.Data.Viewer.MarketplaceFeedStories.Edges {
 		priceReplace := strings.NewReplacer("£", "", ",", "", ".", "")
-		priceFloat := priceReplace.Replace(advertResponse.Node.Listing.FormattedPrice.Text)
+		priceFloat := priceReplace.Replace(advertResponse.Node.Listing.ListingPrice.FormattedAmount)
 		priceFormatted, _ := strconv.ParseInt(priceFloat, 10, 64)
 
-		var distance uint64
-		cityLocation, err := getCityLocation(advertResponse.Node.Listing.Location.ReverseGeocode.CityPage.DisplayName)
-		if err != nil {
-			p.logger.Errorf("%v", err)
-		} else {
-			distance = haversine(getModelsRequest.BuyLocation.Longitude, getModelsRequest.BuyLocation.Latitude, cityLocation.Longitude, cityLocation.Latitude)
-		}
+		// var distance uint64
+		// cityLocation, err := getCityLocation(advertResponse.Node.Listing.Location.ReverseGeocode.CityPage.DisplayName)
+		// if err != nil {
+		// 	p.logger.Errorf("%v", err)
+		// } else {
+		// 	distance = haversine(getModelsRequest.BuyLocation.Longitude, getModelsRequest.BuyLocation.Latitude, cityLocation.Longitude, cityLocation.Latitude)
+		// }
 
 		mileage := strings.Replace(strings.Replace(advertResponse.Node.Listing.CustomSubTitlesWithRenderingFlags[0].Subtitle, "K", ",000", 1), " · Dealership", "", 1)
 		advert := structs.Advert{
@@ -208,7 +216,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 			ID:          advertResponse.Node.StoryKey,
 			Link:        "https://en-gb.facebook.com/marketplace/item/" + advertResponse.Node.Listing.ID,
 			Location:    advertResponse.Node.Listing.Location.ReverseGeocode.City,
-			Distance:    distance,
+			Distance:    0,
 			Title:       advertResponse.Node.Listing.MarketplaceListingTitle,
 			Price:       priceFormatted * 100,
 			Mileage:     mileage,
@@ -226,13 +234,160 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 // GetMakes gets makes from facebook
 func (p *Provider) GetMakes() ([]structs.Make, error) {
 	p.logger.Notice("GetMakes for Facebook")
-	return []structs.Make{}, nil
+
+	client := &http.Client{
+		Timeout: time.Duration(30 * time.Second),
+	}
+
+	getMakesRequest := GetMakesRequest{
+		CategoryIDS:            []int64{807311116002614},
+		CategoryRankingEnabled: true,
+		ContextualData: []ContextualData{
+			{Name: "make", Value: "2260278494029417"},
+			{Name: "seo_url", Value: "vehicles"},
+		},
+		HideL2Cats: true,
+		Surface:    "CATEGORY_FEED",
+		TopicPageParams: TopicPageParams{
+			LocationID: "manchester",
+			URL:        "vehicles",
+		},
+	}
+
+	makesRequestBody, err := json.Marshal(getMakesRequest)
+	if err != nil {
+		return []structs.Make{}, err
+	}
+
+	formData := url.Values{
+		"fb_api_caller_class":      {"RelayModern"},
+		"fb_api_req_friendly_name": {"CometMarketplaceSearchRootQuery"},
+		"variables":                {string(makesRequestBody)},
+		"doc_id":                   {"5183985588339655"},
+	}
+
+	// p.logger.Debugf("%s", string(makesRequestBody))
+
+	req, err := http.NewRequest("POST", "https://en-gb.facebook.com/api/graphql/", strings.NewReader(formData.Encode()))
+	if err != nil {
+		return []structs.Make{}, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := client.Do(req)
+	if err != nil {
+		return []structs.Make{}, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return []structs.Make{}, err
+	}
+
+	// p.logger.Debugf("%s", string(body))
+
+	var makesResponse GetMakesResponse
+	if err := json.Unmarshal(body, &makesResponse); err != nil {
+		return []structs.Make{}, err
+	}
+
+	makes := []structs.Make{}
+	for _, filterType := range makesResponse.Data.Viewer.MarketplaceStructuredFields {
+		if filterType.FilterKey == "make" {
+			for _, makeResponse := range filterType.Choices {
+				make := structs.Make{
+					Provider: "facebook",
+					ID:       makeResponse.Value,
+					Name:     makeResponse.DisplayName,
+				}
+				makes = append(makes, make)
+			}
+		}
+	}
+
+	p.logger.Debugf("%v", makes)
+
+	return makes, nil
 }
 
 // GetModels gets models from facebook
 func (p *Provider) GetModels(brand string) ([]structs.Model, error) {
 	p.logger.Notice("GetModels for Facebook")
-	return []structs.Model{}, nil
+
+	client := &http.Client{
+		Timeout: time.Duration(30 * time.Second),
+	}
+
+	getModelsRequest := GetMakesRequest{
+		CategoryIDS:            []int64{},
+		CategoryRankingEnabled: true,
+		ContextualData: []ContextualData{
+			{Name: "seo_url", Value: "\"" + brand + "\""},
+		},
+		HideL2Cats: false,
+		Surface:    "CATEGORY_FEED",
+		TopicPageParams: TopicPageParams{
+			LocationID: "category",
+			URL:        brand,
+		},
+	}
+
+	modelsRequestBody, err := json.Marshal(getModelsRequest)
+	if err != nil {
+		return []structs.Model{}, err
+	}
+
+	formData := url.Values{
+		"fb_api_caller_class":      {"RelayModern"},
+		"fb_api_req_friendly_name": {"CometMarketplaceSearchRootQuery"},
+		"variables":                {string(modelsRequestBody)},
+		"doc_id":                   {"5183985588339655"},
+	}
+
+	// p.logger.Debugf("%s", string(modelsRequestBody))
+
+	req, err := http.NewRequest("POST", "https://en-gb.facebook.com/api/graphql/", strings.NewReader(formData.Encode()))
+	if err != nil {
+		return []structs.Model{}, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := client.Do(req)
+	if err != nil {
+		return []structs.Model{}, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return []structs.Model{}, err
+	}
+
+	// p.logger.Debugf("%s", string(body))
+
+	var modelsResponse GetMakesResponse
+	if err := json.Unmarshal(body, &modelsResponse); err != nil {
+		return []structs.Model{}, err
+	}
+
+	carModels := []structs.Model{}
+	for _, filterType := range modelsResponse.Data.Viewer.MarketplaceStructuredFields {
+		if filterType.FilterKey == "model" {
+			for _, modelResponse := range filterType.Choices {
+				carModel := structs.Model{
+					Provider: "facebook",
+					ID:       modelResponse.Value,
+					Name:     modelResponse.DisplayName,
+				}
+				carModels = append(carModels, carModel)
+			}
+		}
+	}
+
+	// p.logger.Debugf("%v", carModels)
+
+	return carModels, nil
 }
 
 func getLocation(postcode string) (structs.Location, error) {
