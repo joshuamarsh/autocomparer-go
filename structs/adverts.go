@@ -34,12 +34,6 @@ type Advert struct {
 	Image       string `json:"image"`
 }
 
-// AddAdvert function to append a advert to the array
-func (adverts *Adverts) AddAdvert(advert Advert) []Advert {
-	adverts.Adverts = append(adverts.Adverts, advert)
-	return adverts.Adverts
-}
-
 // Location stores location parameters
 type Location struct {
 	Longitude float64 `json:"longitude"`

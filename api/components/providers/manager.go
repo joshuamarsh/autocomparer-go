@@ -62,8 +62,8 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 				providerErrors <- err
 			} else {
 				responses := make(map[string]structs.Adverts)
-				for _, r := range res {
-					responses[provider] = r
+				responses[provider] = structs.Adverts{
+					Adverts: res,
 				}
 
 				providerResponses <- responses

@@ -7,7 +7,7 @@ type GetAdvertsRequest struct {
 	CategoryIDArray              []int64          `json:"categoryIDArray"`
 	ContextualData               []ContextualData `json:"contextual_data"`
 	Count                        int64            `json:"count"`
-	Cursor                       interface{}      `json:"cursor"`
+	Cursor                       string           `json:"cursor"`
 	MarketplaceBrowseContext     string           `json:"marketplaceBrowseContext"`
 	NumericVerticalFields        []interface{}    `json:"numericVerticalFields"`
 	NumericVerticalFieldsBetween []interface{}    `json:"numericVerticalFieldsBetween"`
@@ -228,4 +228,23 @@ type CurrentMarketplace struct {
 
 type Extensions struct {
 	IsFinal bool `json:"is_final"`
+}
+
+type Cursor struct {
+	Basic Basic `json:"basic"`
+}
+
+type Basic struct {
+	ItemIndex int64 `json:"item_index"`
+}
+
+type GetAdvertsPaginationQueryParams struct {
+	postcode  string
+	radius    string
+	brand     string
+	model     string
+	sortBy    string
+	page      *uint
+	ItemIndex int64
+	Count     int64
 }

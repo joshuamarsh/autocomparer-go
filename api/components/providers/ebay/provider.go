@@ -30,7 +30,7 @@ func NewProvider(l *logger.Logger) *Provider {
 }
 
 // GetAdvert gets adverts from ebay
-func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Adverts, error) {
+func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Advert, error) {
 	p.logger.Notice("GetAdvert for Ebay")
 
 	ebaySort := ""
@@ -80,15 +80,15 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 
 	body, err := p.execute("GET", urlQuery)
 	if err != nil {
-		return []structs.Adverts{}, err
+		return []structs.Advert{}, err
 	}
 
 	var advertsResponse FindItemsByKeywordsResponse
 	if err := xml.Unmarshal(body, &advertsResponse); err != nil {
-		return []structs.Adverts{}, err
+		return []structs.Advert{}, err
 	}
 
-	adverts := structs.Adverts{}
+	adverts := []structs.Advert{}
 	for _, advertResponse := range advertsResponse.SearchResult.Item {
 		advertImage := advertResponse.PictureURLLarge
 		if advertImage == "" {
@@ -118,12 +118,10 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 			Description: advertResponse.Subtitle,
 			Image:       advertImage,
 		}
-		adverts.AddAdvert(advert)
+		adverts = append(adverts, advert)
 	}
 
-	providerAdverts := make([]structs.Adverts, 0)
-	providerAdverts = append(providerAdverts, adverts)
-	return providerAdverts, nil
+	return adverts, nil
 }
 
 func (p *Provider) execute(method string, parameters string) ([]byte, error) {

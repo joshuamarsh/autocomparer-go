@@ -31,7 +31,7 @@ func NewProvider(l *logger.Logger) *Provider {
 }
 
 // GetAdvert gets adverts from autotrader
-func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Adverts, error) {
+func (p *Provider) GetAdvert(postcode string, radius string, brand string, model string, sortBy string, page *uint) ([]structs.Advert, error) {
 	p.logger.Notice("GetAdvert for Autotrader")
 
 	autotraderSort := ""
@@ -59,6 +59,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	baseURL := "https://www.autotrader.co.uk"
 
 	db := database.DB
+	searchBrand := brand
 	if brand != "" {
 		var makeAutotrader models.Make
 		db.Where("value = ? AND provider = ?", brand, "autotrader").First(&makeAutotrader)
@@ -69,17 +70,17 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 
 	if model != "" {
 		var modelAutotrader models.Model
-		db.Where("value = ? AND provider = ? AND make = ?", model, "autotrader", brand).First(&modelAutotrader)
+		db.Where("value = ? AND provider = ? AND make = ?", model, "autotrader", searchBrand).First(&modelAutotrader)
 		if modelAutotrader.ProviderValue != "" {
 			model = url.QueryEscape(modelAutotrader.ProviderValue)
 		}
 	}
 
 	urlQuery := fmt.Sprintf("/car-search?sort=%s&postcode=%s&radius=%s&make=%s&model=%s", autotraderSort, postcode, radius, brand, model)
-	p.logger.Debugf("%s", urlQuery)
+	// p.logger.Debugf("%s", urlQuery)
 	c := colly.NewCollector()
 
-	Adverts := structs.Adverts{}
+	adverts := []structs.Advert{}
 	c.OnHTML(".search-page__result", func(e *colly.HTMLElement) {
 		featuredListing := e.Attr("data-is-featured-listing")
 		promotedListing := e.Attr("data-is-promoted-listing")
@@ -143,7 +144,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 					Description: description,
 					Image:       image,
 				}
-				Adverts.AddAdvert(advert)
+				adverts = append(adverts, advert)
 			}
 		}
 	})
@@ -174,7 +175,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 		autotraderPage := *page*3 - 2
 		c.Visit(fmt.Sprintf("%s%s&page=%d", baseURL, urlQuery, int(autotraderPage)))
 		if advertCount < (int(autotraderPage)*10 - 9) {
-			Adverts = structs.Adverts{}
+			adverts = []structs.Advert{}
 		}
 		if advertCount > (int(autotraderPage)+1)*10 {
 			c.Visit(fmt.Sprintf("%s%s&page=%d", baseURL, urlQuery, (int(autotraderPage) + 1)))
@@ -186,9 +187,7 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 	// c.Visit(baseURL + urlQuery + "&page=3")
 	// fmt.Printf("%v", Adverts)
 
-	providerAdverts := make([]structs.Adverts, 0)
-	providerAdverts = append(providerAdverts, Adverts)
-	return providerAdverts, nil
+	return adverts, nil
 }
 
 // GetMakes gets makes from autotrader
