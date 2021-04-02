@@ -170,13 +170,13 @@ func (m *Manager) GetMakes(providers []string) ([]structs.MakeProvider, error) {
 				makesProvider := []structs.MakeProvider{}
 				for _, make := range r {
 					newMake := true
+					idReplace := strings.NewReplacer(" ", "", "/", "")
+					id := strings.ToLower(idReplace.Replace(make.Name))
 					for _, modelProvider := range makesProviders {
-						if make.Name == modelProvider.Name {
+						if id == modelProvider.ID {
 							newMake = false
 						}
 					}
-					idReplace := strings.NewReplacer(" ", "", "/", "")
-					id := strings.ToLower(idReplace.Replace(make.Name))
 					makeDB := models.Make{
 						Value:         id,
 						Provider:      make.Provider,
@@ -232,7 +232,6 @@ func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelPr
 	modelProviders := []structs.ModelProvider{}
 	db := database.DB
 	for _, provider := range providers {
-		m.logger.Debugf(provider + " success")
 		select {
 		case err := <-providerErrors:
 			return []structs.ModelProvider{}, err
@@ -242,13 +241,13 @@ func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelPr
 				modelsProvider := []structs.ModelProvider{}
 				for _, model := range r {
 					newModel := true
+					idReplace := strings.NewReplacer(" ", "", "/", "")
+					id := strings.ToLower(idReplace.Replace(model.Name))
 					for _, modelProvider := range modelProviders {
-						if model.Name == modelProvider.Name {
+						if id == modelProvider.ID {
 							newModel = false
 						}
 					}
-					idReplace := strings.NewReplacer(" ", "", "/", "")
-					id := strings.ToLower(idReplace.Replace(model.Name))
 					modelDB := models.Model{
 						Value:         id,
 						Provider:      model.Provider,
@@ -267,6 +266,7 @@ func (m *Manager) GetModels(providers []string, brand string) ([]structs.ModelPr
 				modelProviders = append(modelProviders, modelsProvider...)
 			}
 			providerLock.Unlock()
+			m.logger.Debugf(provider + " success")
 		}
 	}
 
