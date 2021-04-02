@@ -24,7 +24,7 @@ func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 	parameters.Postcode = strings.ReplaceAll(parameters.Postcode, " ", "")
 	cacheKey := structs.Sha256(parameters)
 
-	if config.Config("CACHE") == "true" {
+	if config.Config("ADVERT_CACHE") == "true" {
 		advertsCacheString, err := cache.RedisDB.Get(ctx, cacheKey).Result()
 		if err != nil {
 			j.logger.Debugf("%v", err)
@@ -45,7 +45,7 @@ func (j *JSON) GetAdverts(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get adverts", "data": err.Error()})
 	}
 
-	if config.Config("CACHE") == "true" {
+	if config.Config("ADVERT_CACHE") == "true" {
 		advertsJSON, err := json.Marshal(&adverts)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get adverts", "data": err.Error()})
@@ -66,21 +66,26 @@ func (j *JSON) GetMakes(c *fiber.Ctx) error {
 		j.logger.Errorf("%v", err)
 	}
 
-	makesCacheString, err := cache.RedisDB.Get(ctx, "makes").Result()
-	if err != nil {
-		j.logger.Debugf("%v", err)
-	}
-
-	if makesCacheString != "" {
-		var makesCache []structs.MakeProvider
-		if err := json.Unmarshal([]byte(makesCacheString), &makesCache); err != nil {
-			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
+	if config.Config("CACHE") == "true" {
+		makesCacheString, err := cache.RedisDB.Get(ctx, "makes").Result()
+		if err != nil {
+			j.logger.Debugf("%v", err)
 		}
 
-		return c.JSON(makesCache)
+		if makesCacheString != "" {
+			var makesCache []structs.MakeProvider
+			if err := json.Unmarshal([]byte(makesCacheString), &makesCache); err != nil {
+				return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
+			}
+
+			return c.JSON(makesCache)
+		}
 	}
 
 	makes, err := j.providersManager.GetMakes(parameters.Provider)
+	if err != nil {
+		j.logger.Debugf("%v", err)
+	}
 
 	// j.logger.Debugf("%v", adverts)
 	makesJSON, err := json.Marshal(&makes)
@@ -88,9 +93,11 @@ func (j *JSON) GetMakes(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get makes", "data": err.Error()})
 	}
 
-	err = cache.RedisDB.SetEX(ctx, "makes", string(makesJSON), 30*time.Minute).Err()
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get makes", "data": err.Error()})
+	if config.Config("CACHE") == "true" {
+		err = cache.RedisDB.SetEX(ctx, "makes", string(makesJSON), 30*time.Minute).Err()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get makes", "data": err.Error()})
+		}
 	}
 
 	if err != nil {
@@ -108,23 +115,28 @@ func (j *JSON) GetModels(c *fiber.Ctx) error {
 		j.logger.Errorf("%v", err)
 	}
 
-	modelsCacheString, err := cache.RedisDB.Get(ctx, parameters.Brand).Result()
-	if err != nil {
-		j.logger.Debugf("%v", err)
-	}
-
-	if modelsCacheString != "" {
-		var modelsCache []structs.ModelProvider
-		if err := json.Unmarshal([]byte(modelsCacheString), &modelsCache); err != nil {
-			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
+	if config.Config("CACHE") == "true" {
+		modelsCacheString, err := cache.RedisDB.Get(ctx, parameters.Brand).Result()
+		if err != nil {
+			j.logger.Debugf("%v", err)
 		}
 
-		return c.JSON(modelsCache)
+		if modelsCacheString != "" {
+			var modelsCache []structs.ModelProvider
+			if err := json.Unmarshal([]byte(modelsCacheString), &modelsCache); err != nil {
+				return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
+			}
+
+			return c.JSON(modelsCache)
+		}
 	}
 
 	models := []structs.ModelProvider{}
 	if parameters.Brand != "" {
 		models, err = j.providersManager.GetModels(parameters.Provider, parameters.Brand)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err})
+		}
 	}
 
 	modelsJSON, err := json.Marshal(&models)
@@ -132,9 +144,11 @@ func (j *JSON) GetModels(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
 	}
 
-	err = cache.RedisDB.SetEX(ctx, parameters.Brand, string(modelsJSON), 30*time.Minute).Err()
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
+	if config.Config("CACHE") == "true" {
+		err = cache.RedisDB.SetEX(ctx, parameters.Brand, string(modelsJSON), 30*time.Minute).Err()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
+		}
 	}
 
 	if err != nil {
