@@ -94,7 +94,7 @@ func (j *JSON) GetMakes(c *fiber.Ctx) error {
 	}
 
 	if config.Config("CACHE") == "true" {
-		err = cache.RedisDB.SetEX(ctx, "makes", string(makesJSON), 30*time.Minute).Err()
+		err = cache.RedisDB.SetEX(ctx, "makes", string(makesJSON), 6*time.Hour).Err()
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get makes", "data": err.Error()})
 		}
@@ -145,7 +145,7 @@ func (j *JSON) GetModels(c *fiber.Ctx) error {
 	}
 
 	if config.Config("CACHE") == "true" {
-		err = cache.RedisDB.SetEX(ctx, parameters.Brand, string(modelsJSON), 30*time.Minute).Err()
+		err = cache.RedisDB.SetEX(ctx, parameters.Brand, string(modelsJSON), 6*time.Hour).Err()
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Couldn't get models", "data": err.Error()})
 		}
