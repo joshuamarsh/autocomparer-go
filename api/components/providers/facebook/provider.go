@@ -257,39 +257,43 @@ func (p *Provider) GetAdvert(postcode string, radius string, brand string, model
 
 		facebookAdverts = append(facebookAdverts, facebookAdvertsFromQuery2...)
 	}
-	adverts := []structs.Advert{}
-	for _, advertResponse := range facebookAdverts {
-		priceReplace := strings.NewReplacer("£", "", ",", "", ".", "")
-		priceFloat := priceReplace.Replace(advertResponse.Node.Listing.ListingPrice.FormattedAmount)
-		priceFormatted, _ := strconv.ParseInt(priceFloat, 10, 64)
-		// p.logger.DebugF("Ranking: %s", advertResponse.Node.Tracking)
+	if len(facebookAdverts) > 1 {
+		adverts := []structs.Advert{}
+		for _, advertResponse := range facebookAdverts {
+			priceReplace := strings.NewReplacer("£", "", ",", "", ".", "")
+			priceFloat := priceReplace.Replace(advertResponse.Node.Listing.ListingPrice.FormattedAmount)
+			priceFormatted, _ := strconv.ParseInt(priceFloat, 10, 64)
+			// p.logger.DebugF("Ranking: %s", advertResponse.Node.Tracking)
 
-		// var distance uint64
-		// cityLocation, err := getCityLocation(advertResponse.Node.Listing.Location.ReverseGeocode.CityPage.DisplayName)
-		// if err != nil {
-		// 	p.logger.Errorf("%v", err)
-		// } else {
-		// 	distance = haversine(getModelsRequest.BuyLocation.Longitude, getModelsRequest.BuyLocation.Latitude, cityLocation.Longitude, cityLocation.Latitude)
-		// }
+			// var distance uint64
+			// cityLocation, err := getCityLocation(advertResponse.Node.Listing.Location.ReverseGeocode.CityPage.DisplayName)
+			// if err != nil {
+			// 	p.logger.Errorf("%v", err)
+			// } else {
+			// 	distance = haversine(getModelsRequest.BuyLocation.Longitude, getModelsRequest.BuyLocation.Latitude, cityLocation.Longitude, cityLocation.Latitude)
+			// }
 
-		mileage := strings.Replace(strings.Replace(advertResponse.Node.Listing.CustomSubTitlesWithRenderingFlags[0].Subtitle, "K", ",000", 1), " · Dealership", "", 1)
-		advert := structs.Advert{
-			Provider:    "facebook",
-			ID:          advertResponse.Node.StoryKey,
-			Link:        "https://en-gb.facebook.com/marketplace/item/" + advertResponse.Node.Listing.ID,
-			Location:    advertResponse.Node.Listing.Location.ReverseGeocode.City,
-			Distance:    0,
-			Title:       advertResponse.Node.Listing.MarketplaceListingTitle,
-			Price:       priceFormatted * 100,
-			Mileage:     mileage,
-			Description: "",
-			Image:       advertResponse.Node.Listing.PrimaryListingPhoto.Image.URI,
+			mileage := strings.Replace(strings.Replace(advertResponse.Node.Listing.CustomSubTitlesWithRenderingFlags[0].Subtitle, "K", ",000", 1), " · Dealership", "", 1)
+			advert := structs.Advert{
+				Provider:    "facebook",
+				ID:          advertResponse.Node.StoryKey,
+				Link:        "https://en-gb.facebook.com/marketplace/item/" + advertResponse.Node.Listing.ID,
+				Location:    advertResponse.Node.Listing.Location.ReverseGeocode.City,
+				Distance:    0,
+				Title:       advertResponse.Node.Listing.MarketplaceListingTitle,
+				Price:       priceFormatted * 100,
+				Mileage:     mileage,
+				Description: "",
+				Image:       advertResponse.Node.Listing.PrimaryListingPhoto.Image.URI,
+			}
+
+			adverts = append(adverts, advert)
 		}
 
-		adverts = append(adverts, advert)
+		return adverts, nil
+	} else {
+		return []structs.Advert{}, nil
 	}
-
-	return adverts, nil
 }
 
 // GetMakes gets makes from facebook

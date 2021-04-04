@@ -79,17 +79,19 @@ func (m *Manager) GetAdvert(providers []string, brand string, model string, post
 		case res := <-providerResponses:
 			providerLock.Lock()
 			for _, r := range res {
-				if sortBy == "price_asc" {
-					highestPrice := r.Adverts[len(r.Adverts)-1].Price
-					if advertProviders.LowestProviderHighestPrice == nil {
-						advertProviders.LowestProviderHighestPrice = &highestPrice
-					} else {
-						if highestPrice < *advertProviders.LowestProviderHighestPrice {
-							*advertProviders.LowestProviderHighestPrice = highestPrice
+				if len(r.Adverts) > 1 {
+					if sortBy == "price_asc" {
+						highestPrice := r.Adverts[len(r.Adverts)-1].Price
+						if advertProviders.LowestProviderHighestPrice == nil {
+							advertProviders.LowestProviderHighestPrice = &highestPrice
+						} else {
+							if highestPrice < *advertProviders.LowestProviderHighestPrice {
+								*advertProviders.LowestProviderHighestPrice = highestPrice
+							}
 						}
 					}
+					advertProviders.Adverts = append(advertProviders.Adverts, r.Adverts...)
 				}
-				advertProviders.Adverts = append(advertProviders.Adverts, r.Adverts...)
 			}
 			m.logger.Debugf(provider + " success")
 			providerLock.Unlock()
